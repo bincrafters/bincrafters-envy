@@ -125,6 +125,16 @@ def update_travis(project_slug, env_vars):
                 raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
 
 
+def appveyor_encrypt(value):
+    appveyor_url = '{host}/api/account/encrypt'.format(host=appveyor_host)
+    request = dict()
+    request['plainValue'] = value
+    r = requests.post(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
+    if r.status_code != 200:
+        raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
+    return r.content.decode()
+
+
 def update_appveyor(project_slug, env_vars):
     appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(
         host=appveyor_host,
@@ -137,23 +147,24 @@ def update_appveyor(project_slug, env_vars):
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
     appveyor_vars = json.loads(r.content.decode())
 
-    new_env_vars = env_vars.copy()
+    new_env_vars = dict()
+    for k, v in env_vars.items():
+        new_var = dict()
+        new_var['name'] = k
+        new_var['value'] = dict()
+        new_var['value']['value'] = appveyor_encrypt(v)
+        new_var['value']['isEncrypted'] = True
+        new_env_vars[k] = new_var
 
     for v in appveyor_vars:
         name = v['name']
-        value = v['value']['value']
         if name not in new_env_vars.keys():
-            new_env_vars[name] = value
+            new_env_vars[name] = v
 
     request = []
 
-    for name, value in new_env_vars.items():
-        var = dict()
-        var['name'] = name
-        var['value'] = dict()
-        var['value']['isEncrypted'] = False
-        var['value']['value'] = value
-        request.append(var)
+    for _, v in new_env_vars.items():
+        request.append(v)
 
     r = requests.put(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
     if r.status_code != 204:
