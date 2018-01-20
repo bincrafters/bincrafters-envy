@@ -8,6 +8,7 @@ import json
 import argparse
 import sys
 import os
+import fnmatch
 
 
 def travis_token():
@@ -64,6 +65,18 @@ def add_to_appveyor(project_slug):
             raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
 
 
+def travis_activate(project_slug, activate):
+    travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
+        host=travis_host,
+        accountName='bincrafters',
+        projectSlug=project_slug
+    )
+    travis_url += '/activate' if activate else '/deactivate'
+    r = requests.post(travis_url, headers=travis_headers)
+    if r.status_code != 200:
+        raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
+
+
 def add_to_travis(project_slug):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
         host=travis_host,
@@ -82,10 +95,7 @@ def add_to_travis(project_slug):
     else:
         print('adding project %s to travis' % project_slug)
 
-        travis_url += '/activate'
-        r = requests.post(travis_url, headers=travis_headers)
-        if r.status_code != 200:
-            raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
+        travis_activate(project_slug, True)
 
 
 def update_travis(project_slug, env_vars):
@@ -171,14 +181,82 @@ def update_appveyor(project_slug, env_vars):
         raise Exception('appveyor PUT request failed %s %s' % (r.status_code, r.content))
 
 
+def yes_no():
+    print('[y/n]')
+    choice = input().lower()
+    while choice not in ['y', 'n']:
+        print('please respond with y or n')
+        choice = raw_input().lower()
+    return choice == 'y'
+
+
+def remove_from_travis(project_slug, force):
+    travis_url = '{host}/owner/{accountName}/repos'.format(
+        host=travis_host,
+        accountName='bincrafters'
+    )
+    r = requests.get(travis_url, headers=travis_headers)
+    if r.status_code != 200:
+        raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
+    travis_projects = json.loads(r.content.decode())
+    projects = []
+    for p in travis_projects['repositories']:
+        slug = p['slug'].split('/')[1]
+        projects.append(slug)
+    projects = [p for p in projects if fnmatch.fnmatch(p, project_slug)]
+    if not projects:
+        print("no projects matching %s pattern were found on appveyor" % project_slug)
+        return
+    print("the following projects will be removed:")
+    for p in projects:
+        print(p)
+    remove = force or yes_no()
+    if remove:
+        for p in projects:
+            print('deactivate', p)
+            travis_activate(p, False)
+
+
+def remove_from_appveyor(project_slug, force):
+    appveyor_url = '{host}/api/projects'.format(host=appveyor_host)
+    r = requests.get(appveyor_url, headers=appveyor_headers)
+    if r.status_code != 200:
+        raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
+    # charmap' codec can't encode character '\u015f' in position 169832: character maps to <undefined>
+    p = r.content.decode('utf-8', 'replace')
+    appveyor_projects = json.loads(p)
+    projects = [p['slug'] for p in appveyor_projects]
+    projects = [p for p in projects if fnmatch.fnmatch(p, project_slug.replace('_', '-'))]
+    if not projects:
+        print("no projects matching %s pattern were found on appveyor" % project_slug)
+        return
+    print("the following projects will be removed:")
+    for p in projects:
+        print(p)
+    remove = force or yes_no()
+    if remove:
+        for p in projects:
+            appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(
+                host=appveyor_host,
+                accountName='BinCrafters',
+                projectSlug=p)
+            r = requests.delete(appveyor_url, headers=appveyor_headers)
+            if r.status_code != 204:
+                raise Exception('appveyor DELETE request failed %s %s' % (r.status_code, r.content))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='envy: update environment variables on travis and appveyor')
-    parser.add_argument('-p', action='store', dest='project', type=str, required=True,
+    parser.add_argument('-p', '--project', action='store', dest='project', type=str, required=True,
                         help='GitHub project name (aka projectSlug)')
     parser.add_argument('--skip-travis', action='store_true', dest='skip_travis',
                         help='skip travis configuration')
-    parser.add_argument('--skip-apveyor', action='store_true', dest='skip_appveyor',
+    parser.add_argument('--skip-appveyor', action='store_true', dest='skip_appveyor',
                         help='skip appveyor configuration')
+    parser.add_argument('-r', '--remove', action='store_true', dest='remove',
+                        help='remove specified project(s)')
+    parser.add_argument('-f', '--force', action='store_true', dest='force',
+                        help='force removal for all projects (no confirmation)')
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
@@ -207,8 +285,11 @@ if __name__ == '__main__':
     if not args.skip_travis:
         try:
             print('updating travis...')
-            add_to_travis(args.project)
-            update_travis(args.project, env_vars)
+            if args.remove:
+                remove_from_travis(args.project, args.force)
+            else:
+                add_to_travis(args.project)
+                update_travis(args.project, env_vars)
             print('updating travis...OK')
         except Exception as e:
             print('updating travis...FAIL %s' % e)
@@ -217,8 +298,11 @@ if __name__ == '__main__':
     if not args.skip_appveyor:
         try:
             print('updating appveyor...')
-            add_to_appveyor(args.project)
-            update_appveyor(args.project, env_vars)
+            if args.remove:
+                remove_from_appveyor(args.project, args.force)
+            else:
+                add_to_appveyor(args.project)
+                update_appveyor(args.project, env_vars)
             print('updating appveyor...OK')
         except Exception as e:
             print('updating appveyor...FAIL %s' % e)
