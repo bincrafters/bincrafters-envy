@@ -16,6 +16,7 @@ def travis_token():
 def appveyor_token():
     return open('appveyor.token', 'r').read().strip()
 
+
 travis_host = 'https://api.travis-ci.org'
 appveyor_host = 'https://ci.appveyor.com'
 
@@ -33,13 +34,13 @@ travis_headers = {
 }
 
 
-def add_to_appveyor(projectSlug):
+def add_to_appveyor(project_slug):
     appveyor_url = '{host}/api/projects'.format(host=appveyor_host)
     r = requests.get(appveyor_url, headers=appveyor_headers)
 
     repository_name = '{accountName}/{projectSlug}'.format(
         accountName='bincrafters',
-        projectSlug=projectSlug
+        projectSlug=project_slug
     )
     projects = json.loads(r.content.decode())
     if r.status_code != 200:
@@ -50,9 +51,9 @@ def add_to_appveyor(projectSlug):
         if project['repositoryName'] == repository_name:
             found = True
     if found:
-        print('project %s already exists on appveyor' % projectSlug)
+        print('project %s already exists on appveyor' % project_slug)
     else:
-        print('adding project %s to appveyor' % projectSlug)
+        print('adding project %s to appveyor' % project_slug)
 
         request = dict()
         request['repositoryProvider'] = 'gitHub'
@@ -62,11 +63,11 @@ def add_to_appveyor(projectSlug):
             raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
 
 
-def add_to_travis(projectSlug):
+def add_to_travis(project_slug):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
         host=travis_host,
         accountName='bincrafters',
-        projectSlug=projectSlug
+        projectSlug=project_slug
     )
 
     r = requests.get(travis_url, headers=travis_headers)
@@ -76,9 +77,9 @@ def add_to_travis(projectSlug):
     travis_vars = json.loads(r.content.decode())
 
     if travis_vars['active']:
-        print('project %s already exists on travis' % projectSlug)
+        print('project %s already exists on travis' % project_slug)
     else:
-        print('adding project %s to travis' % projectSlug)
+        print('adding project %s to travis' % project_slug)
 
         travis_url += '/activate'
         r = requests.post(travis_url, headers=travis_headers)
@@ -86,11 +87,11 @@ def add_to_travis(projectSlug):
             raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
 
 
-def update_travis(projectSlug, env_vars):
+def update_travis(project_slug, env_vars):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
         host=travis_host,
         accountName='bincrafters',
-        projectSlug=projectSlug
+        projectSlug=project_slug
     )
 
     r = requests.get(travis_url, headers=travis_headers)
@@ -111,7 +112,7 @@ def update_travis(projectSlug, env_vars):
             travis_url_env = '{host}/repo/{accountName}%2F{projectSlug}/env_var/{id}'.format(
                 host=travis_host,
                 accountName='bincrafters',
-                projectSlug=projectSlug,
+                projectSlug=project_slug,
                 id=ids[name]
             )
             r = requests.patch(travis_url_env, data=json.dumps(request), headers=travis_headers)
@@ -123,11 +124,11 @@ def update_travis(projectSlug, env_vars):
                 raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
 
 
-def update_appveyor(projectSlug, env_vars):
+def update_appveyor(project_slug, env_vars):
     appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(
         host=appveyor_host,
         accountName='BinCrafters',
-        projectSlug=projectSlug.replace('_', '-')
+        projectSlug=project_slug.replace('_', '-')
     )
 
     r = requests.get(appveyor_url, headers=appveyor_headers)
@@ -155,6 +156,7 @@ def update_appveyor(projectSlug, env_vars):
     r = requests.put(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
     if r.status_code != 204:
         raise Exception('appveyor PUT request failed %s %s' % (r.status_code, r.content))
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='envy: update environment variables on travis and appveyor')
