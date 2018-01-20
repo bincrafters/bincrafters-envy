@@ -142,7 +142,8 @@ def update_appveyor(project_slug, env_vars):
     for v in appveyor_vars:
         name = v['name']
         value = v['value']['value']
-        new_env_vars[name] = value
+        if name not in new_env_vars.keys():
+            new_env_vars[name] = value
 
     request = []
 
