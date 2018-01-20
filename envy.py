@@ -247,7 +247,7 @@ def remove_from_appveyor(project_slug, force):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='envy: update environment variables on travis and appveyor')
-    parser.add_argument('-p', '--project', action='store', dest='project', type=str, required=True,
+    parser.add_argument('-p', '--project', action='append', dest='projects', type=str, required=True,
                         help='GitHub project name (aka projectSlug)')
     parser.add_argument('--skip-travis', action='store_true', dest='skip_travis',
                         help='skip travis configuration')
@@ -282,30 +282,32 @@ if __name__ == '__main__':
 
     failed = False
 
-    if not args.skip_travis:
-        try:
-            print('updating travis...')
-            if args.remove:
-                remove_from_travis(args.project, args.force)
-            else:
-                add_to_travis(args.project)
-                update_travis(args.project, env_vars)
-            print('updating travis...OK')
-        except Exception as e:
-            print('updating travis...FAIL %s' % e)
-            failed = True
+    for project in args.projects:
 
-    if not args.skip_appveyor:
-        try:
-            print('updating appveyor...')
-            if args.remove:
-                remove_from_appveyor(args.project, args.force)
-            else:
-                add_to_appveyor(args.project)
-                update_appveyor(args.project, env_vars)
-            print('updating appveyor...OK')
-        except Exception as e:
-            print('updating appveyor...FAIL %s' % e)
-            failed = True
+        if not args.skip_travis:
+            try:
+                print('updating project %s on travis...' % project)
+                if args.remove:
+                    remove_from_travis(project, args.force)
+                else:
+                    add_to_travis(project)
+                    update_travis(project, env_vars)
+                print('updating project %s on travis...OK' % project)
+            except Exception as e:
+                print('updating project %s on travis...FAIL %s' % (project, e))
+                failed = True
+
+        if not args.skip_appveyor:
+            try:
+                print('updating project %s on appveyor...' % project)
+                if args.remove:
+                    remove_from_appveyor(project, args.force)
+                else:
+                    add_to_appveyor(project)
+                    update_appveyor(project, env_vars)
+                print('updating project %s on appveyor...OK' % project)
+            except Exception as e:
+                print('updating project %s on appveyor...FAIL %s' % (project, e))
+                failed = True
 
     sys.exit(1 if failed else 0)
