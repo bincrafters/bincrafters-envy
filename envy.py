@@ -7,6 +7,7 @@ import requests
 import json
 import argparse
 import sys
+import os
 
 
 def travis_token():
@@ -169,6 +170,18 @@ if __name__ == '__main__':
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
+
+    if not os.path.isfile('env.ini'):
+        print('env.ini file is missing, please create one (see env.ini.example for the details)')
+        sys.exit(1)
+
+    if not os.path.isfile('appveyor.token'):
+        print('appveyor.token file is missing, please create one (see README.MD for the details')
+        sys.exit(1)
+
+    if not os.path.isfile('travis.token'):
+        print('travis.token file is missing, please create one (see README.MD for the details')
+        sys.exit(1)
 
     env_vars = dict()
     config = ConfigParser()
