@@ -11,39 +11,29 @@ import os
 import fnmatch
 
 
-def travis_token():
+def travis_token(filename):
     if 'TRAVIS_TOKEN' in os.environ:
         return os.environ['TRAVIS_TOKEN']
-    if os.path.isfile('travis.token'):
-        return open('travis.token', 'r').read().strip()
+    if os.path.isfile(filename):
+        return open(filename, 'r').read().strip()
     raise Exception('no travis token provided!'
-                    'please specify TRAVIS_TOKEN environment variable or create travis.token file')
+                    'please specify TRAVIS_TOKEN environment variable or create %s file' % filename)
 
 
-def appveyor_token():
+def appveyor_token(filename):
     if 'APPVEYOR_TOKEN' in os.environ:
         return os.environ['APPVEYOR_TOKEN']
-    if os.path.isfile('appveyor.token'):
-        return open('appveyor.token', 'r').read().strip()
+    if os.path.isfile(filename):
+        return open(filename, 'r').read().strip()
     raise Exception('no appveyor token provided!'
-                    'please specify APPVEYOR_TOKEN environment variable or create appveyor.token file')
+                    'please specify APPVEYOR_TOKEN environment variable or create %s file' % filename)
 
 
 travis_host = 'https://api.travis-ci.org'
 appveyor_host = 'https://ci.appveyor.com'
 
-appveyor_headers = {
-    'Authorization': 'Bearer {token}'.format(token=appveyor_token()),
-    'Content-type': 'application/json'
-}
-
-travis_headers = {
-    'User-Agent': 'Envy/1.0',
-    'Accept': 'application/vnd.travis-ci.2+json',
-    'Travis-API-Version': '3',
-    'Content-Type': 'application/json',
-    'Authorization': 'token {token}'.format(token=travis_token())
-}
+appveyor_headers = dict()
+travis_headers = dict()
 
 travis_account = 'bincrafters'
 appveyor_account = 'BinCrafters'
@@ -273,6 +263,10 @@ if __name__ == '__main__':
                         help='force removal for all projects (no confirmation)')
     parser.add_argument('-c', '--config', type=str, default='envy.ini',
                         help='configuration INI file name')
+    parser.add_argument('-t', '--travis-token-file', type=str, default='travis.token',
+                        help='name of the file containing travis token')
+    parser.add_argument('-a', '--appveyor-token-file', type=str, default='appveyor.token',
+                        help='name of the file containing appveyortoken')
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
@@ -281,13 +275,18 @@ if __name__ == '__main__':
         print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
         sys.exit(1)
 
-    if not os.path.isfile('appveyor.token'):
-        print('appveyor.token file is missing, please create one (see README.MD for the details')
-        sys.exit(1)
+    travis_headers = {
+        'User-Agent': 'Envy/1.0',
+        'Accept': 'application/vnd.travis-ci.2+json',
+        'Travis-API-Version': '3',
+        'Content-Type': 'application/json',
+        'Authorization': 'token {token}'.format(token=travis_token(args.travis_token_file))
+    }
 
-    if not os.path.isfile('travis.token'):
-        print('travis.token file is missing, please create one (see README.MD for the details')
-        sys.exit(1)
+    appveyor_headers = {
+        'Authorization': 'Bearer {token}'.format(token=appveyor_token(args.appveyor_token_file)),
+        'Content-type': 'application/json'
+    }
 
     env_vars = dict()
     config = ConfigParser()
