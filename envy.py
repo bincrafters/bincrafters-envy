@@ -45,13 +45,17 @@ travis_headers = {
     'Authorization': 'token {token}'.format(token=travis_token())
 }
 
+travis_account = 'bincrafters'
+appveyor_account = 'BinCrafters'
+github_account = 'bincrafters'
+
 
 def add_to_appveyor(project_slug):
     appveyor_url = '{host}/api/projects'.format(host=appveyor_host)
     r = requests.get(appveyor_url, headers=appveyor_headers)
 
     repository_name = '{accountName}/{projectSlug}'.format(
-        accountName='bincrafters',
+        accountName=github_account,
         projectSlug=project_slug
     )
     projects = json.loads(r.content.decode())
@@ -78,7 +82,7 @@ def add_to_appveyor(project_slug):
 def travis_activate(project_slug, activate):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
         host=travis_host,
-        accountName='bincrafters',
+        accountName=travis_account,
         projectSlug=project_slug
     )
     travis_url += '/activate' if activate else '/deactivate'
@@ -90,7 +94,7 @@ def travis_activate(project_slug, activate):
 def add_to_travis(project_slug):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
         host=travis_host,
-        accountName='bincrafters',
+        accountName=travis_account,
         projectSlug=project_slug
     )
 
@@ -111,7 +115,7 @@ def add_to_travis(project_slug):
 def update_travis(project_slug, env_vars):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
         host=travis_host,
-        accountName='bincrafters',
+        accountName=travis_account,
         projectSlug=project_slug
     )
 
@@ -132,7 +136,7 @@ def update_travis(project_slug, env_vars):
         if name in ids.keys():
             travis_url_env = '{host}/repo/{accountName}%2F{projectSlug}/env_var/{id}'.format(
                 host=travis_host,
-                accountName='bincrafters',
+                accountName=travis_account,
                 projectSlug=project_slug,
                 id=ids[name]
             )
@@ -158,7 +162,7 @@ def appveyor_encrypt(value):
 def update_appveyor(project_slug, env_vars):
     appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(
         host=appveyor_host,
-        accountName='BinCrafters',
+        accountName=appveyor_account,
         projectSlug=project_slug.replace('_', '-')
     )
 
@@ -203,7 +207,7 @@ def yes_no():
 def remove_from_travis(project_slug, force):
     travis_url = '{host}/owner/{accountName}/repos'.format(
         host=travis_host,
-        accountName='bincrafters'
+        accountName=travis_account
     )
     r = requests.get(travis_url, headers=travis_headers)
     if r.status_code != 200:
@@ -248,7 +252,7 @@ def remove_from_appveyor(project_slug, force):
         for p in projects:
             appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(
                 host=appveyor_host,
-                accountName='BinCrafters',
+                accountName=appveyor_account,
                 projectSlug=p)
             r = requests.delete(appveyor_url, headers=appveyor_headers)
             if r.status_code != 204:
@@ -289,6 +293,11 @@ if __name__ == '__main__':
     config.read('env.ini')
     for k, v in config['env'].items():
         env_vars[k] = v
+
+    if 'account' in config:
+        travis_account = config['account']['travis'] or travis_account
+        appveyor_account = config['account']['appveyor'] or appveyor_account
+        github_account = config['account']['github'] or github_account
 
     failed = False
 
