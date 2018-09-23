@@ -12,11 +12,21 @@ import fnmatch
 
 
 def travis_token():
-    return open('travis.token', 'r').read().strip()
+    if 'TRAVIS_TOKEN' in os.environ:
+        return os.environ['TRAVIS_TOKEN']
+    if os.path.isfile('travis.token'):
+        return open('travis.token', 'r').read().strip()
+    raise Exception('no travis token provided!'
+                    'please specify TRAVIS_TOKEN environment variable or create travis.token file')
 
 
 def appveyor_token():
-    return open('appveyor.token', 'r').read().strip()
+    if 'APPVEYOR_TOKEN' in os.environ:
+        return os.environ['APPVEYOR_TOKEN']
+    if os.path.isfile('appveyor.token'):
+        return open('appveyor.token', 'r').read().strip()
+    raise Exception('no appveyor token provided!'
+                    'please specify APPVEYOR_TOKEN environment variable or create appveyor.token file')
 
 
 travis_host = 'https://api.travis-ci.org'
