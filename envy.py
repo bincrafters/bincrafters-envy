@@ -271,12 +271,14 @@ if __name__ == '__main__':
                         help='remove specified project(s)')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
                         help='force removal for all projects (no confirmation)')
+    parser.add_argument('-c', '--config', type=str, default='envy.ini',
+                        help='configuration INI file name')
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
 
-    if not os.path.isfile('env.ini'):
-        print('env.ini file is missing, please create one (see env.ini.example for the details)')
+    if not os.path.isfile(args.config):
+        print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
         sys.exit(1)
 
     if not os.path.isfile('appveyor.token'):
@@ -290,7 +292,7 @@ if __name__ == '__main__':
     env_vars = dict()
     config = ConfigParser()
     config.optionxform = str
-    config.read('env.ini')
+    config.read(args.config)
     for k, v in config['env'].items():
         env_vars[k] = v
 
