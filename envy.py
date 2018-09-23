@@ -102,7 +102,7 @@ def add_to_travis(project_slug):
         travis_activate(project_slug, True)
 
 
-def update_travis(project_slug, env_vars):
+def update_travis(project_slug, env_vars, encrypted_vars):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
         host=travis_host,
         accountName=travis_account,
@@ -121,7 +121,7 @@ def update_travis(project_slug, env_vars):
         request = dict()
         request['env_var.name'] = name
         request['env_var.value'] = value
-        request['env_var.public'] = False
+        request['env_var.public'] = name not in encrypted_vars
 
         if name in ids.keys():
             travis_url_env = '{host}/repo/{accountName}%2F{projectSlug}/env_var/{id}'.format(
@@ -149,7 +149,7 @@ def appveyor_encrypt(value):
     return r.content.decode()
 
 
-def update_appveyor(project_slug, env_vars):
+def update_appveyor(project_slug, env_vars, encrypted_vars):
     appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(
         host=appveyor_host,
         accountName=appveyor_account,
@@ -166,8 +166,12 @@ def update_appveyor(project_slug, env_vars):
         new_var = dict()
         new_var['name'] = k
         new_var['value'] = dict()
-        new_var['value']['value'] = appveyor_encrypt(v)
-        new_var['value']['isEncrypted'] = True
+        if k in encrypted_vars:
+            new_var['value']['value'] = appveyor_encrypt(v)
+            new_var['value']['isEncrypted'] = True
+        else:
+            new_var['value']['value'] = v
+            new_var['value']['isEncrypted'] = False
         new_env_vars[k] = new_var
 
     for v in appveyor_vars:
@@ -291,7 +295,7 @@ if __name__ == '__main__':
     }
 
     env_vars = dict()
-    config = ConfigParser()
+    config = ConfigParser(allow_no_value=True)
     config.optionxform = str
     config.read(args.config)
     for k, v in config['env'].items():
@@ -301,6 +305,10 @@ if __name__ == '__main__':
         for e in args.env:
             k, v = e.split('=')
             env_vars[k] = v
+
+    encrypted_vars = []
+    for k, _ in config['encrypted'].items():
+        encrypted_vars.append(k)
 
     if 'account' in config:
         travis_account = config['account']['travis'] or travis_account
@@ -318,7 +326,7 @@ if __name__ == '__main__':
                     remove_from_travis(project, args.force)
                 else:
                     add_to_travis(project)
-                    update_travis(project, env_vars)
+                    update_travis(project, env_vars, encrypted_vars)
                 print('updating project %s on travis...OK' % project)
             except Exception as e:
                 print('updating project %s on travis...FAIL %s' % (project, e))
@@ -331,7 +339,7 @@ if __name__ == '__main__':
                     remove_from_appveyor(project, args.force)
                 else:
                     add_to_appveyor(project)
-                    update_appveyor(project, env_vars)
+                    update_appveyor(project, env_vars, encrypted_vars)
                 print('updating project %s on appveyor...OK' % project)
             except Exception as e:
                 print('updating project %s on appveyor...FAIL %s' % (project, e))
