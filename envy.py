@@ -267,6 +267,8 @@ if __name__ == '__main__':
                         help='name of the file containing travis token')
     parser.add_argument('-a', '--appveyor-token-file', type=str, default='appveyor.token',
                         help='name of the file containing appveyortoken')
+    parser.add_argument('-e', '--env', action='append', dest='env', type=str,
+                        help='additional environment variables')
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
@@ -294,6 +296,11 @@ if __name__ == '__main__':
     config.read(args.config)
     for k, v in config['env'].items():
         env_vars[k] = v
+
+    if args.env:
+        for e in args.env:
+            k, v = e.split('=')
+            env_vars[k] = v
 
     if 'account' in config:
         travis_account = config['account']['travis'] or travis_account
