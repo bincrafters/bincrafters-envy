@@ -10,6 +10,10 @@ import sys
 import os
 import fnmatch
 
+__author__  = "BinCrafters"
+__license__ = "MIT"
+__version__ = '0.1.0'
+
 
 def travis_token(filename):
     if 'TRAVIS_TOKEN' in os.environ:
@@ -253,8 +257,8 @@ def remove_from_appveyor(project_slug, force):
                 raise Exception('appveyor DELETE request failed %s %s' % (r.status_code, r.content))
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='envy: update environment variables on travis and appveyor')
+def main(args):
+    parser = argparse.ArgumentParser(description='update environment variables on travis and appveyor')
     parser.add_argument('-p', '--project', action='append', dest='projects', type=str, required=True,
                         help='GitHub project name (aka projectSlug)')
     parser.add_argument('--skip-travis', action='store_true', dest='skip_travis',
