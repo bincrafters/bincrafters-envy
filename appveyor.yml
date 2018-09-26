@@ -1,0 +1,24 @@
+build: false
+
+
+environment:
+    PYTHON_ARCH: "32"
+
+    matrix:
+        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+          PYTHON: "C:\\Python27"
+          PYTHON_VERSION: "2.7.8"
+        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+          PYTHON: "C:\\Python37"
+          PYTHON_VERSION: "3.7.0"
+
+
+install:
+  - set PATH=%PATH%;%PYTHON%/Scripts/
+  - pip.exe install -e .[test]
+
+test_script:
+- cd tests
+- pytest -v --cov=bincrafters_envy
+- cd ..
+- python setup.py install

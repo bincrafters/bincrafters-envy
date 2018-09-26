@@ -1,5 +1,6 @@
-# envy
-update environment variables for travis and appveyor
+# Bincrafters Envy
+
+#### Update environment variables for travis and appveyor
 
 ## usage
 first, you'll need to obtains travis and appveyor tokens
@@ -25,3 +26,6 @@ CONAN_PASSWORD = <your password>
 ```
 
 then run `python envy.py -p <project>` (e.g. `python envy.py -p conan-libastral`)
+
+#### LICENSE
+[MIT](LICENSE)
