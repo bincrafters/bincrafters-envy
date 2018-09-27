@@ -277,6 +277,7 @@ def main(args):
                         help='name of the file containing appveyortoken')
     parser.add_argument('-e', '--env', action='append', dest='env', type=str,
                         help='additional environment variables')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
