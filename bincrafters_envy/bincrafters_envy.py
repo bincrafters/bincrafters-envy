@@ -12,7 +12,7 @@ import fnmatch
 
 __author__  = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 def travis_token(filename):
