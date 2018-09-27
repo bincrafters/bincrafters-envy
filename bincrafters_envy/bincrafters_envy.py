@@ -33,23 +33,24 @@ def appveyor_token(filename):
                     'please specify APPVEYOR_TOKEN environment variable or create %s file' % filename)
 
 
-travis_host = 'https://api.travis-ci.org'
-appveyor_host = 'https://ci.appveyor.com'
+this = sys.modules[__name__]
+this.travis_host = 'https://api.travis-ci.org'
+this.appveyor_host = 'https://ci.appveyor.com'
 
-appveyor_headers = dict()
-travis_headers = dict()
+this.appveyor_headers = dict()
+this.travis_headers = dict()
 
-travis_account = 'bincrafters'
-appveyor_account = 'BinCrafters'
-github_account = 'bincrafters'
+this.travis_account = 'bincrafters'
+this.appveyor_account = 'BinCrafters'
+this.github_account = 'bincrafters'
 
 
 def add_to_appveyor(project_slug):
-    appveyor_url = '{host}/api/projects'.format(host=appveyor_host)
-    r = requests.get(appveyor_url, headers=appveyor_headers)
+    appveyor_url = '{host}/api/projects'.format(host=this.appveyor_host)
+    r = requests.get(appveyor_url, headers=this.appveyor_headers)
 
     repository_name = '{accountName}/{projectSlug}'.format(
-        accountName=github_account,
+        accountName=this.github_account,
         projectSlug=project_slug
     )
     projects = json.loads(r.content.decode())
@@ -68,31 +69,31 @@ def add_to_appveyor(project_slug):
         request = dict()
         request['repositoryProvider'] = 'gitHub'
         request['repositoryName'] = repository_name
-        r = requests.post(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
+        r = requests.post(appveyor_url, data=json.dumps(request), headers=this.appveyor_headers)
         if r.status_code != 200:
             raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
 
 
 def travis_activate(project_slug, activate):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
-        host=travis_host,
+        host=this.travis_host,
         accountName=travis_account,
         projectSlug=project_slug
     )
     travis_url += '/activate' if activate else '/deactivate'
-    r = requests.post(travis_url, headers=travis_headers)
+    r = requests.post(travis_url, headers=this.travis_headers)
     if r.status_code != 200:
         raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
 
 
 def add_to_travis(project_slug):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
-        host=travis_host,
-        accountName=travis_account,
+        host=this.travis_host,
+        accountName=this.travis_account,
         projectSlug=project_slug
     )
 
-    r = requests.get(travis_url, headers=travis_headers)
+    r = requests.get(travis_url, headers=this.travis_headers)
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
 
@@ -108,12 +109,12 @@ def add_to_travis(project_slug):
 
 def update_travis(project_slug, env_vars, encrypted_vars):
     travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
-        host=travis_host,
-        accountName=travis_account,
+        host=this.travis_host,
+        accountName=this.travis_account,
         projectSlug=project_slug
     )
 
-    r = requests.get(travis_url, headers=travis_headers)
+    r = requests.get(travis_url, headers=this.travis_headers)
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
     ids = dict()
@@ -129,25 +130,25 @@ def update_travis(project_slug, env_vars, encrypted_vars):
 
         if name in ids.keys():
             travis_url_env = '{host}/repo/{accountName}%2F{projectSlug}/env_var/{id}'.format(
-                host=travis_host,
-                accountName=travis_account,
+                host=this.travis_host,
+                accountName=this.travis_account,
                 projectSlug=project_slug,
                 id=ids[name]
             )
-            r = requests.patch(travis_url_env, data=json.dumps(request), headers=travis_headers)
+            r = requests.patch(travis_url_env, data=json.dumps(request), headers=this.travis_headers)
             if r.status_code != 200:
                 raise Exception('travis PATCH request failed %s %s' % (r.status_code, r.content))
         else:
-            r = requests.post(travis_url, data=json.dumps(request), headers=travis_headers)
+            r = requests.post(travis_url, data=json.dumps(request), headers=this.travis_headers)
             if r.status_code != 201:
                 raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
 
 
 def appveyor_encrypt(value):
-    appveyor_url = '{host}/api/account/encrypt'.format(host=appveyor_host)
+    appveyor_url = '{host}/api/account/encrypt'.format(host=this.appveyor_host)
     request = dict()
     request['plainValue'] = value
-    r = requests.post(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
+    r = requests.post(appveyor_url, data=json.dumps(request), headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
     return r.content.decode()
@@ -155,12 +156,12 @@ def appveyor_encrypt(value):
 
 def update_appveyor(project_slug, env_vars, encrypted_vars):
     appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(
-        host=appveyor_host,
-        accountName=appveyor_account,
+        host=this.appveyor_host,
+        accountName=this.appveyor_account,
         projectSlug=project_slug.replace('_', '-')
     )
 
-    r = requests.get(appveyor_url, headers=appveyor_headers)
+    r = requests.get(appveyor_url, headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
     appveyor_vars = json.loads(r.content.decode())
@@ -188,7 +189,7 @@ def update_appveyor(project_slug, env_vars, encrypted_vars):
     for _, v in new_env_vars.items():
         request.append(v)
 
-    r = requests.put(appveyor_url, data=json.dumps(request), headers=appveyor_headers)
+    r = requests.put(appveyor_url, data=json.dumps(request), headers=this.appveyor_headers)
     if r.status_code != 204:
         raise Exception('appveyor PUT request failed %s %s' % (r.status_code, r.content))
 
@@ -204,10 +205,10 @@ def yes_no():
 
 def remove_from_travis(project_slug, force):
     travis_url = '{host}/owner/{accountName}/repos'.format(
-        host=travis_host,
-        accountName=travis_account
+        host=this.travis_host,
+        accountName=this.travis_account
     )
-    r = requests.get(travis_url, headers=travis_headers)
+    r = requests.get(travis_url, headers=this.travis_headers)
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
     travis_projects = json.loads(r.content.decode())
@@ -230,8 +231,8 @@ def remove_from_travis(project_slug, force):
 
 
 def remove_from_appveyor(project_slug, force):
-    appveyor_url = '{host}/api/projects'.format(host=appveyor_host)
-    r = requests.get(appveyor_url, headers=appveyor_headers)
+    appveyor_url = '{host}/api/projects'.format(host=this.appveyor_host)
+    r = requests.get(appveyor_url, headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
     # charmap' codec can't encode character '\u015f' in position 169832: character maps to <undefined>
@@ -249,10 +250,10 @@ def remove_from_appveyor(project_slug, force):
     if remove:
         for p in projects:
             appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(
-                host=appveyor_host,
-                accountName=appveyor_account,
+                host=this.appveyor_host,
+                accountName=this.appveyor_account,
                 projectSlug=p)
-            r = requests.delete(appveyor_url, headers=appveyor_headers)
+            r = requests.delete(appveyor_url, headers=this.appveyor_headers)
             if r.status_code != 204:
                 raise Exception('appveyor DELETE request failed %s %s' % (r.status_code, r.content))
 
@@ -286,7 +287,7 @@ def main(args):
         print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
         sys.exit(1)
 
-    travis_headers = {
+    this.travis_headers = {
         'User-Agent': 'Envy/1.0',
         'Accept': 'application/vnd.travis-ci.2+json',
         'Travis-API-Version': '3',
@@ -294,10 +295,11 @@ def main(args):
         'Authorization': 'token {token}'.format(token=travis_token(args.travis_token_file))
     }
 
-    appveyor_headers = {
+    this.appveyor_headers = {
         'Authorization': 'Bearer {token}'.format(token=appveyor_token(args.appveyor_token_file)),
         'Content-type': 'application/json'
     }
+
 
     env_vars = dict()
     config = ConfigParser(allow_no_value=True)
@@ -316,9 +318,9 @@ def main(args):
         encrypted_vars.append(k)
 
     if 'account' in config:
-        travis_account = config['account']['travis'] or travis_account
-        appveyor_account = config['account']['appveyor'] or appveyor_account
-        github_account = config['account']['github'] or github_account
+        this.travis_account = config['account']['travis'] or this.travis_account
+        this.appveyor_account = config['account']['appveyor'] or this.appveyor_account
+        this.github_account = config['account']['github'] or this.github_account
 
     failed = False
 
