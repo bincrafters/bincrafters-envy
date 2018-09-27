@@ -15,7 +15,6 @@ environment:
 
 install:
   - set PATH=%PATH%;%PYTHON%/Scripts/
-  - pip.exe install --upgrade pytest-cov
   - pip.exe install -e .[test]
 
 test_script:

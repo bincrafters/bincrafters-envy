@@ -12,7 +12,7 @@ import fnmatch
 
 __author__  = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 
 
 def travis_token(filename):
@@ -277,6 +277,7 @@ def main(args):
                         help='name of the file containing appveyortoken')
     parser.add_argument('-e', '--env', action='append', dest='env', type=str,
                         help='additional environment variables')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
