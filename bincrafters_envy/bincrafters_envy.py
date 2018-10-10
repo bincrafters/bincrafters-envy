@@ -15,7 +15,9 @@ __license__ = "MIT"
 __version__ = '0.1.1'
 
 
-def travis_token(filename):
+def travis_token(config, filename):
+    if 'token' in config and config['token']['travis']:
+        return config['token']['travis']
     if 'TRAVIS_TOKEN' in os.environ:
         return os.environ['TRAVIS_TOKEN']
     if os.path.isfile(filename):
@@ -24,7 +26,9 @@ def travis_token(filename):
                     'please specify TRAVIS_TOKEN environment variable or create %s file' % filename)
 
 
-def appveyor_token(filename):
+def appveyor_token(config, filename):
+    if 'token' in config and config['token']['appveyor']:
+        return config['token']['appveyor']
     if 'APPVEYOR_TOKEN' in os.environ:
         return os.environ['APPVEYOR_TOKEN']
     if os.path.isfile(filename):
@@ -287,24 +291,24 @@ def main(args):
         print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
         sys.exit(1)
 
+    env_vars = dict()
+    config = ConfigParser(allow_no_value=True)
+    config.optionxform = str
+    config.read(args.config)
+
     this.travis_headers = {
         'User-Agent': 'Envy/1.0',
         'Accept': 'application/vnd.travis-ci.2+json',
         'Travis-API-Version': '3',
         'Content-Type': 'application/json',
-        'Authorization': 'token {token}'.format(token=travis_token(args.travis_token_file))
+        'Authorization': 'token {token}'.format(token=travis_token(config, args.travis_token_file))
     }
 
     this.appveyor_headers = {
-        'Authorization': 'Bearer {token}'.format(token=appveyor_token(args.appveyor_token_file)),
+        'Authorization': 'Bearer {token}'.format(token=appveyor_token(config, args.appveyor_token_file)),
         'Content-type': 'application/json'
     }
 
-
-    env_vars = dict()
-    config = ConfigParser(allow_no_value=True)
-    config.optionxform = str
-    config.read(args.config)
     for k, v in config['env'].items():
         env_vars[k] = v
 
