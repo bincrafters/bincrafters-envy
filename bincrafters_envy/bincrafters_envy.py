@@ -16,7 +16,7 @@ __version__ = '0.1.1'
 
 
 def travis_token(config, filename):
-    if 'token' in config and config['token']['travis']:
+    if config and 'token' in config and config['token']['travis']:
         return config['token']['travis']
     if 'TRAVIS_TOKEN' in os.environ:
         return os.environ['TRAVIS_TOKEN']
@@ -27,7 +27,7 @@ def travis_token(config, filename):
 
 
 def appveyor_token(config, filename):
-    if 'token' in config and config['token']['appveyor']:
+    if config and 'token' in config and config['token']['appveyor']:
         return config['token']['appveyor']
     if 'APPVEYOR_TOKEN' in os.environ:
         return os.environ['APPVEYOR_TOKEN']
