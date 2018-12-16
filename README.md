@@ -15,23 +15,28 @@ To install using pypi.org:
 #### Usage
 first, you'll need to obtains travis and appveyor tokens
 
-to obtain appveyor token, visit this [page](https://ci.appveyor.com/api-token)
+to obtain appveyor token, visit this [page](https://ci.appveyor.com/api-keys)
 
-to obtain travis token, install travis [ruby client](https://github.com/travis-ci/travis.rb), then run:
+to obtain travis token (for travis-ci.com), visit this [page](https://travis-ci.com/account/preferences)
 
-    travis login
-    travis token
-
-put your appveyor token into file named **appveyor.token**
-
-put your travis token into file named **travis.token**
+to obtain travis token (for travis-ci.org), visit this [page](https://travis-ci.org/account/preferences)
 
 create **env.ini** file with your environment variables (take a look at the **env.ini.example**):
 
 ```
+[account]
+appveyor = <your account name on appveyor>
+travis = <your account name on travis>
+github = <your account name on GitHub>
 [env]
 CONAN_LOGIN_USERNAME = <your username>
 CONAN_PASSWORD = <your password>
+[encrypted]
+CONAN_PASSWORD
+[token]
+appveyor = <your appveyor token>
+travis = <your travis token>
+
 ```
 
 then run `python envy.py -p <project>` (e.g. `python envy.py -p conan-libastral`)
