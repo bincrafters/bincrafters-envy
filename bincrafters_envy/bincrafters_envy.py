@@ -296,18 +296,20 @@ def main(args):
     config.optionxform = str
     config.read(args.config)
 
-    this.travis_headers = {
-        'User-Agent': 'Envy/1.0',
-        'Accept': 'application/vnd.travis-ci.2+json',
-        'Travis-API-Version': '3',
-        'Content-Type': 'application/json',
-        'Authorization': 'token {token}'.format(token=travis_token(config, args.travis_token_file))
-    }
+    if not args.skip_travis:
+        this.travis_headers = {
+            'User-Agent': 'Envy/1.0',
+            'Accept': 'application/vnd.travis-ci.2+json',
+            'Travis-API-Version': '3',
+            'Content-Type': 'application/json',
+            'Authorization': 'token {token}'.format(token=travis_token(config, args.travis_token_file))
+        }
 
-    this.appveyor_headers = {
-        'Authorization': 'Bearer {token}'.format(token=appveyor_token(config, args.appveyor_token_file)),
-        'Content-type': 'application/json'
-    }
+    if not args.skip_appveyor:
+        this.appveyor_headers = {
+            'Authorization': 'Bearer {token}'.format(token=appveyor_token(config, args.appveyor_token_file)),
+            'Content-type': 'application/json'
+        }
 
     for k, v in config['env'].items():
         env_vars[k] = v
