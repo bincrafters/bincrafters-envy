@@ -209,7 +209,7 @@ def update_appveyor(project_slug, env_vars, encrypted_vars):
 
 def yes_no():
     print('[y/n]')
-    choice = input().lower()
+    choice = raw_input().lower()
     while choice not in ['y', 'n']:
         print('please respond with y or n')
         choice = raw_input().lower()
