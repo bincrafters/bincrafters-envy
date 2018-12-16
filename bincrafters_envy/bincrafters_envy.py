@@ -348,7 +348,7 @@ def main(args):
                     update_travis(project, env_vars, encrypted_vars)
                 print('updating project %s on travis...OK' % project)
             except Exception as e:
-                print('updating project %s on travis...FAIL %s' % (project, e))
+                print('updating project %s on travis...FAIL\n%s' % (project, e))
                 failed = True
 
         if not args.skip_appveyor:
@@ -361,7 +361,7 @@ def main(args):
                     update_appveyor(project, env_vars, encrypted_vars)
                 print('updating project %s on appveyor...OK' % project)
             except Exception as e:
-                print('updating project %s on appveyor...FAIL %s' % (project, e))
+                print('updating project %s on appveyor...FAIL\n%s' % (project, e))
                 failed = True
 
     sys.exit(1 if failed else 0)
