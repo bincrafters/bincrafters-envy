@@ -48,9 +48,18 @@ this.travis_account = 'bincrafters'
 this.appveyor_account = 'BinCrafters'
 this.github_account = 'bincrafters'
 
+this.appveyor_v2_api = False
+
+
+def appveyor_endpoint():
+    if this.appveyor_v2_api:
+        return "{host}/api/account/{account}".format(host=this.appveyor_host, account=this.appveyor_account)
+    else:
+        return "{host}/api".format(host=this.appveyor_host)
+
 
 def add_to_appveyor(project_slug):
-    appveyor_url = '{host}/api/projects'.format(host=this.appveyor_host)
+    appveyor_url = '{endpoint}/projects'.format(endpoint=appveyor_endpoint())
     r = requests.get(appveyor_url, headers=this.appveyor_headers)
 
     repository_name = '{accountName}/{projectSlug}'.format(
@@ -149,7 +158,7 @@ def update_travis(project_slug, env_vars, encrypted_vars):
 
 
 def appveyor_encrypt(value):
-    appveyor_url = '{host}/api/account/encrypt'.format(host=this.appveyor_host)
+    appveyor_url = '{endpoint}/account/encrypt'.format(endpoint=appveyor_endpoint())
     request = dict()
     request['plainValue'] = value
     r = requests.post(appveyor_url, data=json.dumps(request), headers=this.appveyor_headers)
@@ -235,7 +244,7 @@ def remove_from_travis(project_slug, force):
 
 
 def remove_from_appveyor(project_slug, force):
-    appveyor_url = '{host}/api/projects'.format(host=this.appveyor_host)
+    appveyor_url = '{endpoint}/projects'.format(endpoint=appveyor_endpoint())
     r = requests.get(appveyor_url, headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
@@ -301,21 +310,24 @@ def main(args):
     config.read(args.config)
 
     if not args.skip_travis:
+        token = travis_token(config, args.travis_token_file)
         this.travis_headers = {
             'User-Agent': 'Envy/1.0',
             'Accept': 'application/vnd.travis-ci.2+json',
             'Travis-API-Version': '3',
             'Content-Type': 'application/json',
-            'Authorization': 'token {token}'.format(token=travis_token(config, args.travis_token_file))
+            'Authorization': 'token {token}'.format(token=token)
         }
         this.travis_host = args.travis_host
 
     if not args.skip_appveyor:
+        token = appveyor_token(config, args.appveyor_token_file)
         this.appveyor_headers = {
-            'Authorization': 'Bearer {token}'.format(token=appveyor_token(config, args.appveyor_token_file)),
+            'Authorization': 'Bearer {token}'.format(token=token),
             'Content-type': 'application/json'
         }
         this.appveyor_host = args.appveyor_host
+        this.appveyor_v2_api = token.startswith("v2.0")
 
     for k, v in config['env'].items():
         env_vars[k] = v
