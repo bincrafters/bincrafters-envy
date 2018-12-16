@@ -38,8 +38,8 @@ def appveyor_token(config, filename):
 
 
 this = sys.modules[__name__]
-this.travis_host = 'https://api.travis-ci.org'
-this.appveyor_host = 'https://ci.appveyor.com'
+this.travis_host = ''
+this.appveyor_host = ''
 
 this.appveyor_headers = dict()
 this.travis_headers = dict()
@@ -282,6 +282,10 @@ def main(args):
                         help='name of the file containing appveyortoken')
     parser.add_argument('-e', '--env', action='append', dest='env', type=str,
                         help='additional environment variables')
+    parser.add_argument('--travis-host', dest='travis_host', type=str, default='https://api.travis-ci.com',
+                        help='endpoint for travis REST API')
+    parser.add_argument('--appveyor-host', dest='appveyor_host', type=str, default='https://ci.appveyor.com',
+                        help='endpoint for appveyor REST API')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
@@ -304,12 +308,14 @@ def main(args):
             'Content-Type': 'application/json',
             'Authorization': 'token {token}'.format(token=travis_token(config, args.travis_token_file))
         }
+        this.travis_host = args.travis_host
 
     if not args.skip_appveyor:
         this.appveyor_headers = {
             'Authorization': 'Bearer {token}'.format(token=appveyor_token(config, args.appveyor_token_file)),
             'Content-type': 'application/json'
         }
+        this.appveyor_host = args.appveyor_host
 
     for k, v in config['env'].items():
         env_vars[k] = v
