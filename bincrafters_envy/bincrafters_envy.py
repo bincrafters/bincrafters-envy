@@ -57,7 +57,7 @@ def add_to_appveyor(project_slug):
         accountName=this.github_account,
         projectSlug=project_slug
     )
-    projects = json.loads(r.content.decode())
+    projects = json.loads(r.content.decode('utf-8', 'replace'))
     if r.status_code != 200:
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
 
@@ -101,7 +101,7 @@ def add_to_travis(project_slug):
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
 
-    travis_vars = json.loads(r.content.decode())
+    travis_vars = json.loads(r.content.decode('utf-8', 'replace'))
 
     if travis_vars['active']:
         print('project %s already exists on travis' % project_slug)
@@ -122,7 +122,7 @@ def update_travis(project_slug, env_vars, encrypted_vars):
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
     ids = dict()
-    travis_vars = json.loads(r.content.decode())
+    travis_vars = json.loads(r.content.decode('utf-8', 'replace'))
     for v in travis_vars['env_vars']:
         ids[v['name']] = v['id']
 
@@ -155,7 +155,7 @@ def appveyor_encrypt(value):
     r = requests.post(appveyor_url, data=json.dumps(request), headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
-    return r.content.decode()
+    return r.content.decode('utf-8', 'replace')
 
 
 def update_appveyor(project_slug, env_vars, encrypted_vars):
@@ -168,7 +168,7 @@ def update_appveyor(project_slug, env_vars, encrypted_vars):
     r = requests.get(appveyor_url, headers=this.appveyor_headers)
     if r.status_code != 200:
         raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
-    appveyor_vars = json.loads(r.content.decode())
+    appveyor_vars = json.loads(r.content.decode('utf-8', 'replace'))
 
     new_env_vars = dict()
     for k, v in env_vars.items():
@@ -215,7 +215,7 @@ def remove_from_travis(project_slug, force):
     r = requests.get(travis_url, headers=this.travis_headers)
     if r.status_code != 200:
         raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
-    travis_projects = json.loads(r.content.decode())
+    travis_projects = json.loads(r.content.decode('utf-8', 'replace'))
     projects = []
     for p in travis_projects['repositories']:
         slug = p['slug'].split('/')[1]
