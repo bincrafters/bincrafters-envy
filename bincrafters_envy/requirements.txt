@@ -1,2 +1,3 @@
 requests>=2.20
 configparser>=3.5
+six>=1.10.0

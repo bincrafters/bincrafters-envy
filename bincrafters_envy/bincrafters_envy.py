@@ -9,10 +9,11 @@ import argparse
 import sys
 import os
 import fnmatch
+import six
 
 __author__  = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 
 def travis_token(config, filename):
@@ -209,10 +210,10 @@ def update_appveyor(project_slug, env_vars, encrypted_vars):
 
 def yes_no():
     print('[y/n]')
-    choice = raw_input().lower()
+    choice = six.moves.input().lower()
     while choice not in ['y', 'n']:
         print('please respond with y or n')
-        choice = raw_input().lower()
+        choice = six.moves.input().lower()
     return choice == 'y'
 
 
