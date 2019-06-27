@@ -13,7 +13,7 @@ import six
 
 __author__  = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 
 
 def travis_token(config, filename):
@@ -343,9 +343,18 @@ def main(args):
         encrypted_vars.append(k)
 
     if 'account' in config:
-        this.travis_account = config['account']['travis'] or this.travis_account
-        this.appveyor_account = config['account']['appveyor'] or this.appveyor_account
-        this.github_account = config['account']['github'] or this.github_account
+        if 'travis' in config['account']:
+            this.travis_account = config['account']['travis'] or this.travis_account
+        if 'appveyor' in config['account']:
+            this.appveyor_account = config['account']['appveyor'] or this.appveyor_account
+        if 'github' in config['account']:
+            this.github_account = config['account']['github'] or this.github_account
+
+    if 'endpoint' in config:
+        if 'travis' in config['endpoint']:
+            this.travis_host = config['endpoint']['travis'] or this.travis_host
+        if 'appveyor' in config['endpoint']:
+             this.appveyor_host = config['endpoint']['appveyor'] or this.appveyor_host
 
     failed = False
 
