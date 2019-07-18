@@ -13,7 +13,7 @@ import six
 
 __author__  = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.5'
+__version__ = '0.1.6'
 
 
 def travis_token(config, filename):
@@ -284,7 +284,7 @@ def main(args):
                         help='remove specified project(s)')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
                         help='force removal for all projects (no confirmation)')
-    parser.add_argument('-c', '--config', type=str, default='envy.ini',
+    parser.add_argument('-c', '--config', type=str, default='env.ini',
                         help='configuration INI file name')
     parser.add_argument('-t', '--travis-token-file', type=str, default='travis.token',
                         help='name of the file containing travis token')
@@ -301,14 +301,22 @@ def main(args):
     parser.set_defaults(skip_appveyor=False)
     args = parser.parse_args()
 
-    if not os.path.isfile(args.config):
-        print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
-        sys.exit(1)
+    config_path = args.config
+    if not os.path.isfile(config_path):
+        user_home = os.environ.get("HOME", os.environ.get("USERPROFILE", os.path.expanduser("~")))
+        xdg_config_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(user_home, ".config"))
+        xdg_config_path = os.path.join(xdg_config_home, "bincrafters-envy", config_path)
+        if not os.path.isabs(config_path) and os.path.isfile(xdg_config_path):
+            config_path = xdg_config_path
+        else:
+            print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
+            sys.exit(1)
+    print("using config: %s" % config_path)
 
     env_vars = dict()
     config = ConfigParser(allow_no_value=True)
     config.optionxform = str
-    config.read(args.config)
+    config.read(config_path)
 
     if not args.skip_travis:
         token = travis_token(config, args.travis_token_file)
