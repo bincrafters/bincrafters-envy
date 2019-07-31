@@ -20,7 +20,7 @@ class Travis(Base):
             'Authorization': 'token {token}'.format(token=self._token)
         }
         self._account = self._read_account(config) or 'bincrafters'
-        self._host = host
+        self._host = self._read_host(config) or host
 
     def add(self, project_slug):
         travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(

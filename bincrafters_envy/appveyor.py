@@ -16,7 +16,7 @@ class Appveyor(Base):
             'Content-type': 'application/json'
         }
         self._account = self._read_account(config) or 'BinCrafters'
-        self._host = host
+        self._host = self._read_host(config) or host
         if self._token.startswith("v2.0"):
             self._endpoint = "{host}/api/account/{account}".format(host=self._host, account=self._account)
         else:
