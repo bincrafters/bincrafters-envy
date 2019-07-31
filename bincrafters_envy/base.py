@@ -5,6 +5,8 @@
 import os
 import six
 import fnmatch
+import requests
+import json
 from abc import abstractmethod, ABCMeta
 
 
@@ -33,6 +35,32 @@ class Base(object):
     @abstractmethod
     def exists(self, project_slug):
         raise NotImplementedError('"exists" method is abstract')
+
+    def _get(self, **kwargs):
+        return self._request(method="GET", **kwargs)
+
+    def _post(self, **kwargs):
+        return self._request(method="POST", **kwargs)
+
+    def _delete(self, **kwargs):
+        return self._request(method="DELETE", **kwargs)
+
+    def _patch(self, **kwargs):
+        return self._request(method="PATCH", **kwargs)
+
+    def _put(self, **kwargs):
+        return self._request(method="PUT", **kwargs)
+
+    def _request(self, method, url, data=None, expected_status=200):
+        url = self._endpoint + url
+        r = requests.request(method=method, url=url, headers=self._headers, auth=self._auth, data=data)
+        if r.status_code != expected_status:
+            raise Exception('%s %s request failed %s %s' % (self.name, method, r.status_code, r.content))
+        content_type = r.headers.get("Content-Type") or ""
+        if "application/json" in content_type:
+            # charmap' codec can't encode character '\u015f' in position 169832: character maps to <undefined>
+            return json.loads(r.content.decode('utf-8', 'replace'))
+        return r.content
 
     @staticmethod
     def _yes_no():

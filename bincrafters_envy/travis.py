@@ -3,7 +3,6 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from __future__ import print_function
-import requests
 import json
 
 from .base import Base
@@ -15,6 +14,7 @@ class Travis(Base):
 
     def __init__(self, config, host):
 
+        self._auth = None
         self._token = self._read_token(config)
         self._headers = {
             'User-Agent': 'Envy/1.0',
@@ -25,29 +25,21 @@ class Travis(Base):
         }
         self._account = self._read_account(config) or 'bincrafters'
         self._host = self._read_host(config) or host
+        self._endpoint = self._host
 
-    def exists(self, project_slug):
-        travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
-            host=self._host,
+    def _project_url(self, project_slug):
+        return '/repo/{accountName}%2F{projectSlug}'.format(
             accountName=self._account,
             projectSlug=project_slug
         )
-        r = requests.get(travis_url, headers=self._headers)
-        if r.status_code != 200:
-            raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
 
-        travis_vars = json.loads(r.content.decode('utf-8', 'replace'))
-        return travis_vars['active']
+    def exists(self, project_slug):
+        project = self._get(url=self._project_url(project_slug))
+        return project['active']
 
     def list(self):
-        travis_url = '{host}/owner/{accountName}/repos'.format(
-            host=self._host,
-            accountName=self._account
-        )
-        r = requests.get(travis_url, headers=self._headers)
-        if r.status_code != 200:
-            raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
-        travis_projects = json.loads(r.content.decode('utf-8', 'replace'))
+        travis_url = '/owner/{accountName}/repos'.format(accountName=self._account)
+        travis_projects = self._get(url=travis_url)
         projects = []
         for p in travis_projects['repositories']:
             slug = p['slug'].split('/')[1]
@@ -61,48 +53,24 @@ class Travis(Base):
         self._activate(project_slug, False)
 
     def update(self, project_slug, env_vars, encrypted_vars):
-        travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
-            host=self._host,
-            accountName=self._account,
-            projectSlug=project_slug
-        )
-
-        r = requests.get(travis_url, headers=self._headers)
-        if r.status_code != 200:
-            raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
+        travis_url = self._project_url(project_slug) + '/env_vars'
+        travis_vars = self._get(url=travis_url)
         ids = dict()
-        travis_vars = json.loads(r.content.decode('utf-8', 'replace'))
         for v in travis_vars['env_vars']:
             ids[v['name']] = v['id']
 
         for name, value in env_vars.items():
-            request = dict()
-            request['env_var.name'] = name
-            request['env_var.value'] = value
-            request['env_var.public'] = name not in encrypted_vars
-
+            request = {
+                'env_var.name': name,
+                'env_var.value': value,
+                'env_var.public': name not in encrypted_vars
+            }
             if name in ids.keys():
-                travis_url_env = '{host}/repo/{accountName}%2F{projectSlug}/env_var/{id}'.format(
-                    host=self._host,
-                    accountName=self._account,
-                    projectSlug=project_slug,
-                    id=ids[name]
-                )
-                r = requests.patch(travis_url_env, data=json.dumps(request), headers=self._headers)
-                if r.status_code != 200:
-                    raise Exception('travis PATCH request failed %s %s' % (r.status_code, r.content))
+                travis_url_env = self._project_url(project_slug) + '/env_var/' + ids[name]
+                self._patch(url=travis_url_env, data=json.dumps(request))
             else:
-                r = requests.post(travis_url, data=json.dumps(request), headers=self._headers)
-                if r.status_code != 201:
-                    raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
+                self._post(url=travis_url, data=json.dumps(request), expected_status=201)
 
     def _activate(self, project_slug, enable=True):
-        travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
-            host=self._host,
-            accountName=self._account,
-            projectSlug=project_slug
-        )
-        travis_url += '/activate' if enable else '/deactivate'
-        r = requests.post(travis_url, headers=self._headers)
-        if r.status_code != 200:
-            raise Exception('travis POST request failed %s %s' % (r.status_code, r.content))
+        travis_url = self._project_url(project_slug) + '/activate' if enable else '/deactivate'
+        self._post(url=travis_url)

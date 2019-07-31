@@ -3,7 +3,6 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from .base import Base
-import requests
 import json
 from requests.auth import HTTPBasicAuth
 
@@ -25,23 +24,16 @@ class Circle(Base):
         self._github_account = "SSE4"
 
     def list(self):
-        url = self._endpoint + '/projects'
-        r = requests.get(url, headers=self._headers, auth=self._auth)
-        if r.status_code != 200:
-            raise Exception('circle GET request failed %s %s' % (r.status_code, r.content))
-        return [project["reponame"] for project in json.loads(r.content)]
+        projects = self._get(url='/projects')
+        return [project["reponame"] for project in projects]
 
     def _project_url(self, project_slug):
-        return "{endpoint}/project/github/{username}/{project}".format(endpoint=self._endpoint,
-                                                                       username=self._github_account,
-                                                                       project=project_slug)
+        return "/project/github/{username}/{project}".format(username=self._github_account,
+                                                             project=project_slug)
 
     def _activate(self, project_slug, enable=True):
         url = self._project_url(project_slug) + ("/follow" if enable else "/unfollow")
-
-        r = requests.post(url, headers=self._headers, auth=self._auth)
-        if r.status_code != 200:
-            raise Exception('circle POST request failed %s %s' % (r.status_code, r.content))
+        self._post(url=url)
 
     def add_one(self, project_slug):
         self._activate(project_slug)
@@ -54,21 +46,12 @@ class Circle(Base):
 
     def update(self, project_slug, env_vars, encrypted_vars):
         url = self._project_url(project_slug) + "/envvar"
-        r = requests.get(url, headers=self._headers, auth=self._auth)
-        if r.status_code != 200:
-            raise Exception('circle GET request failed %s %s' % (r.status_code, r.content))
-        old_vars = json.loads(r.content)
+        old_vars = self._get(url=url)
         for var in old_vars:
             name = var["name"]
             if name not in env_vars:
-                r = requests.delete(url + "/" + name, headers=self._headers, auth=self._auth)
-                if r.status_code != 200:
-                    raise Exception('circle GET request failed %s %s' % (r.status_code, r.content))
+                self._delete(url=url + "/" + name)
 
         for k, v in env_vars.items():
-            request = dict()
-            request["name"] = k
-            request["value"] = v
-            r = requests.post(url, headers=self._headers, auth=self._auth, data=json.dumps(request))
-            if r.status_code != 201:
-                raise Exception('circle POST request failed %s %s' % (r.status_code, r.content))
+            request = {"name": k, "value": v}
+            self._post(url=url, data=json.dumps(request), expected_status=201)
