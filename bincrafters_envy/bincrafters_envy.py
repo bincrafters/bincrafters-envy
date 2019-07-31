@@ -3,10 +3,13 @@
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from __future__ import print_function
-from configparser import ConfigParser
 import argparse
 import sys
 import os
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 from .appveyor import Appveyor
 from .travis import Travis
