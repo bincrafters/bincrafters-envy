@@ -4,6 +4,7 @@
 
 import os
 import six
+import fnmatch
 from abc import abstractmethod, ABCMeta
 
 
@@ -20,6 +21,18 @@ class Base(object):
     @abstractmethod
     def update(self, project_slug, env_vars, encrypted_vars):
         raise NotImplementedError('"update" method is abstract')
+
+    @abstractmethod
+    def add_one(self, project_slug):
+        raise NotImplementedError('"add_one" method is abstract')
+
+    @abstractmethod
+    def remove_one(self, project_slug):
+        raise NotImplementedError('"remove_one" method is abstract')
+
+    @abstractmethod
+    def exists(self, project_slug):
+        raise NotImplementedError('"exists" method is abstract')
 
     @staticmethod
     def _yes_no():
@@ -57,3 +70,25 @@ class Base(object):
             return open(filename, 'r').read().strip()
         raise Exception('no %s token provided!'
                         'please specify %s environment variable or create %s file' % (cls.name, envname, filename))
+
+    def remove(self, project_slug, force):
+        projects = self.list()
+        projects = [p for p in projects if fnmatch.fnmatch(p, project_slug)]
+        if not projects:
+            print("no projects matching %s pattern were found on %s" % (project_slug, self.name))
+            return
+        print("the following projects will be removed:")
+        for p in projects:
+            print(p)
+        remove = force or self._yes_no()
+        if remove:
+            for p in projects:
+                self.remove_one(p)
+
+    def add(self, project_slug):
+        if self.exists(project_slug):
+            print('project %s already exists on %s' % (project_slug, self.name))
+        else:
+            print('adding project %s to %s' % (project_slug, self.name))
+
+            self.add_one(project_slug)

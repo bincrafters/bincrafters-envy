@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import requests
-import fnmatch
 import json
 
 from .base import Base
@@ -28,60 +27,47 @@ class Appveyor(Base):
             self._endpoint = "{host}/api".format(host=self._host)
         self._github_account = self._read_account(config, "github") or 'bincrafters'
 
-    def add(self, project_slug):
+    def list(self):
         appveyor_url = '{endpoint}/projects'.format(endpoint=self._endpoint)
         r = requests.get(appveyor_url, headers=self._headers)
+        if r.status_code != 200:
+            raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
 
+        # charmap' codec can't encode character '\u015f' in position 169832: character maps to <undefined>
+        projects = json.loads(r.content.decode('utf-8', 'replace'))
+        projects = [project['slug'] for project in projects]
+        return projects
+
+    def exists(self, project_slug):
+        appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(host=self._host,
+                                                                                accountName=self._account,
+                                                                                projectSlug=project_slug)
+        r = requests.get(appveyor_url, headers=self._headers)
+        if r.status_code != 200:
+            return False
+        return True
+
+    def add_one(self, project_slug):
+        appveyor_url = '{endpoint}/projects'.format(endpoint=self._endpoint)
         repository_name = '{accountName}/{projectSlug}'.format(
             accountName=self._github_account,
             projectSlug=project_slug
         )
-        projects = json.loads(r.content.decode('utf-8', 'replace'))
+
+        request = dict()
+        request['repositoryProvider'] = 'gitHub'
+        request['repositoryName'] = repository_name
+        r = requests.post(appveyor_url, data=json.dumps(request), headers=self._headers)
         if r.status_code != 200:
-            raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
+            raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
 
-        found = False
-        for project in projects:
-            if project['repositoryName'] == repository_name:
-                found = True
-        if found:
-            print('project %s already exists on appveyor' % project_slug)
-        else:
-            print('adding project %s to appveyor' % project_slug)
-
-            request = dict()
-            request['repositoryProvider'] = 'gitHub'
-            request['repositoryName'] = repository_name
-            r = requests.post(appveyor_url, data=json.dumps(request), headers=self._headers)
-            if r.status_code != 200:
-                raise Exception('appveyor POST request failed %s %s' % (r.status_code, r.content))
-
-    def remove(self, project_slug, force):
-        appveyor_url = '{endpoint}/projects'.format(endpoint=self._endpoint)
-        r = requests.get(appveyor_url, headers=self._headers)
-        if r.status_code != 200:
-            raise Exception('appveyor GET request failed %s %s' % (r.status_code, r.content))
-        # charmap' codec can't encode character '\u015f' in position 169832: character maps to <undefined>
-        p = r.content.decode('utf-8', 'replace')
-        appveyor_projects = json.loads(p)
-        projects = [p['slug'] for p in appveyor_projects]
-        projects = [p for p in projects if fnmatch.fnmatch(p, project_slug.replace('_', '-'))]
-        if not projects:
-            print("no projects matching %s pattern were found on appveyor" % project_slug)
-            return
-        print("the following projects will be removed:")
-        for p in projects:
-            print(p)
-        remove = force or self._yes_no()
-        if remove:
-            for p in projects:
-                appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(
-                    host=self._host,
-                    accountName=self._account,
-                    projectSlug=p)
-                r = requests.delete(appveyor_url, headers=self._headers)
-                if r.status_code != 204:
-                    raise Exception('appveyor DELETE request failed %s %s' % (r.status_code, r.content))
+    def remove_one(self, project_slug):
+        appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}'.format(host=self._host,
+                                                                                accountName=self._account,
+                                                                                projectSlug=project_slug)
+        r = requests.delete(appveyor_url, headers=self._headers)
+        if r.status_code != 204:
+            raise Exception('appveyor DELETE request failed %s %s' % (r.status_code, r.content))
 
     def update(self, project_slug, env_vars, encrypted_vars):
         appveyor_url = '{host}/api/projects/{accountName}/{projectSlug}/settings/environment-variables'.format(

@@ -24,12 +24,12 @@ class Circle(Base):
         self._github_account = self._read_account(config, "github") or 'bincrafters'
         self._github_account = "SSE4"
 
-        self._cache = dict()
-
+    def list(self):
         url = self._endpoint + '/projects'
         r = requests.get(url, headers=self._headers, auth=self._auth)
         if r.status_code != 200:
             raise Exception('circle GET request failed %s %s' % (r.status_code, r.content))
+        return [project["reponame"] for project in json.loads(r.content)]
 
     def _project_url(self, project_slug):
         return "{endpoint}/project/github/{username}/{project}".format(endpoint=self._endpoint,
@@ -43,11 +43,14 @@ class Circle(Base):
         if r.status_code != 200:
             raise Exception('circle POST request failed %s %s' % (r.status_code, r.content))
 
-    def add(self, project_slug):
+    def add_one(self, project_slug):
         self._activate(project_slug)
 
-    def remove(self, project_slug, force):
+    def remove_one(self, project_slug):
         self._activate(project_slug, False)
+
+    def exists(self, project_slug):
+        return project_slug in self.list()
 
     def update(self, project_slug, env_vars, encrypted_vars):
         url = self._project_url(project_slug) + "/envvar"

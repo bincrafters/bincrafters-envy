@@ -4,7 +4,6 @@
 
 from __future__ import print_function
 import requests
-import fnmatch
 import json
 
 from .base import Base
@@ -27,27 +26,20 @@ class Travis(Base):
         self._account = self._read_account(config) or 'bincrafters'
         self._host = self._read_host(config) or host
 
-    def add(self, project_slug):
+    def exists(self, project_slug):
         travis_url = '{host}/repo/{accountName}%2F{projectSlug}'.format(
             host=self._host,
             accountName=self._account,
             projectSlug=project_slug
         )
-
         r = requests.get(travis_url, headers=self._headers)
         if r.status_code != 200:
             raise Exception('travis GET request failed %s %s' % (r.status_code, r.content))
 
         travis_vars = json.loads(r.content.decode('utf-8', 'replace'))
+        return travis_vars['active']
 
-        if travis_vars['active']:
-            print('project %s already exists on travis' % project_slug)
-        else:
-            print('adding project %s to travis' % project_slug)
-
-            self._activate(project_slug, True)
-
-    def remove(self, project_slug, force):
+    def list(self):
         travis_url = '{host}/owner/{accountName}/repos'.format(
             host=self._host,
             accountName=self._account
@@ -60,18 +52,13 @@ class Travis(Base):
         for p in travis_projects['repositories']:
             slug = p['slug'].split('/')[1]
             projects.append(slug)
-        projects = [p for p in projects if fnmatch.fnmatch(p, project_slug)]
-        if not projects:
-            print("no projects matching %s pattern were found on appveyor" % project_slug)
-            return
-        print("the following projects will be removed:")
-        for p in projects:
-            print(p)
-        remove = force or self._yes_no()
-        if remove:
-            for p in projects:
-                print('deactivate', p)
-                self._activate(p, False)
+        return projects
+
+    def add_one(self, project_slug):
+        self._activate(project_slug)
+
+    def remove_one(self, project_slug):
+        self._activate(project_slug, False)
 
     def update(self, project_slug, env_vars, encrypted_vars):
         travis_url = '{host}/repo/{accountName}%2F{projectSlug}/env_vars'.format(
