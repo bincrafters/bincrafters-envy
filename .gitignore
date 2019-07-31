@@ -104,3 +104,4 @@ appveyor.token
 travis.token
 env.ini
 .pytest_cache/
+.idea
