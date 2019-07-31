@@ -13,6 +13,7 @@ except ImportError:
 
 from .appveyor import Appveyor
 from .travis import Travis
+from .circle import Circle
 
 __author__ = "BinCrafters"
 __license__ = "MIT"
@@ -27,6 +28,8 @@ def main(args):
                         help='skip travis configuration')
     parser.add_argument('--skip-appveyor', action='store_true', dest='skip_appveyor',
                         help='skip appveyor configuration')
+    parser.add_argument('--skip-circle', action='store_true', dest='skip_circle',
+                        help='skip circle configuration')
     parser.add_argument('-r', '--remove', action='store_true', dest='remove',
                         help='remove specified project(s)')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
@@ -43,6 +46,8 @@ def main(args):
                         help='endpoint for travis REST API')
     parser.add_argument('--appveyor-host', dest='appveyor_host', type=str, default=Appveyor.default_host,
                         help='endpoint for appveyor REST API')
+    parser.add_argument('--circle-host', dest='circle_host', type=str, default=Circle.default_host,
+                        help='endpoint for circle REST API')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
@@ -85,6 +90,8 @@ def main(args):
         ci_systems.append(Travis(config, args.travis_host))
     if not args.skip_appveyor:
         ci_systems.append(Appveyor(config, args.appveyor_host))
+    if not args.skip_circle:
+        ci_systems.append(Circle(config, args.circle_host))
 
     for project in args.projects:
         for ci_system in ci_systems:
