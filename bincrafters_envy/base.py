@@ -4,9 +4,23 @@
 
 import os
 import six
+from abc import abstractmethod, ABCMeta
 
 
+@six.add_metaclass(ABCMeta)
 class Base(object):
+    @abstractmethod
+    def add(self, project_slug):
+        raise NotImplementedError('"add" method is abstract')
+
+    @abstractmethod
+    def remove(self, project_slug, force):
+        raise NotImplementedError('"remove" method is abstract')
+
+    @abstractmethod
+    def update(self, project_slug, env_vars, encrypted_vars):
+        raise NotImplementedError('"update" method is abstract')
+
     @staticmethod
     def _yes_no():
         print('[y/n]')
