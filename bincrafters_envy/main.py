@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 import sys
 if sys.version_info.major == 3:

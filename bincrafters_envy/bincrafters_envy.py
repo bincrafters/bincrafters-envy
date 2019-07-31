@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
 
 from __future__ import print_function
 from configparser import ConfigParser
@@ -10,7 +11,7 @@ import os
 from .appveyor import Appveyor
 from .travis import Travis
 
-__author__  = "BinCrafters"
+__author__ = "BinCrafters"
 __license__ = "MIT"
 __version__ = '0.1.7'
 
