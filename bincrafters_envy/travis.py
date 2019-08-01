@@ -13,9 +13,7 @@ class Travis(Base):
     default_host = 'https://api.travis-ci.com'
 
     def __init__(self, config, host):
-
-        self._auth = None
-        self._token = self._read_token(config)
+        super(Travis, self).__init__(config, host)
         self._headers = {
             'User-Agent': 'Envy/1.0',
             'Accept': 'application/vnd.travis-ci.2+json',
@@ -24,7 +22,6 @@ class Travis(Base):
             'Authorization': 'token {token}'.format(token=self._token)
         }
         self._account = self._read_account(config) or 'bincrafters'
-        self._host = self._read_host(config) or host
         self._endpoint = self._host
 
     def _project_url(self, project_slug):

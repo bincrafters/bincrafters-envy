@@ -12,8 +12,7 @@ class Circle(Base):
     default_host = 'https://circleci.com'
 
     def __init__(self, config, host):
-        self._token = self._read_token(config)
-        self._host = self._read_host(config) or host
+        super(Circle, self).__init__(config, host)
         self._endpoint = self._host + "/api/v1.1"
         self._headers = {
             'Accept': 'application/json',

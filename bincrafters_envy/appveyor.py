@@ -13,14 +13,12 @@ class Appveyor(Base):
     default_host = 'https://ci.appveyor.com'
 
     def __init__(self, config, host):
-        self._auth = None
-        self._token = self._read_token(config)
+        super(Appveyor, self).__init__(config, host)
         self._headers = {
             'Authorization': 'Bearer {token}'.format(token=self._token),
             'Content-type': 'application/json'
         }
         self._account = self._read_account(config) or 'BinCrafters'
-        self._host = self._read_host(config) or host
         if self._token.startswith("v2.0"):
             self._endpoint = "{host}/api/account/{account}".format(host=self._host, account=self._account)
         else:

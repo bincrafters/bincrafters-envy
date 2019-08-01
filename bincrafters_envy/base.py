@@ -12,6 +12,11 @@ from abc import abstractmethod, ABCMeta
 
 @six.add_metaclass(ABCMeta)
 class Base(object):
+    def __init__(self, config, host):
+        self._auth = None
+        self._token = self._read_token(config)
+        self._host = self._read_host(config) or host
+
     @abstractmethod
     def add(self, project_slug):
         raise NotImplementedError('"add" method is abstract')
