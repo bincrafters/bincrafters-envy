@@ -21,7 +21,6 @@ class Circle(Base):
         }
         self._auth = HTTPBasicAuth(username=self._token, password='')
         self._github_account = self._read_account(config, "github") or 'bincrafters'
-        self._github_account = "SSE4"
 
     def list(self):
         projects = self._get(url='/projects')
