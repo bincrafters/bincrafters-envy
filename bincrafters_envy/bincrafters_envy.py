@@ -14,13 +14,38 @@ except ImportError:
 from .appveyor import Appveyor
 from .travis import Travis
 from .circle import Circle
+from .azure import Azure
 
 __author__ = "BinCrafters"
 __license__ = "MIT"
 __version__ = '0.1.7'
 
 
+import requests
+import logging
+
+# These two lines enable debugging at httplib level (requests->urllib3->http.client)
+# You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
+# The only thing missing will be the response.body which is not logged.
+try:
+    import http.client as http_client
+except ImportError:
+    # Python 2
+    import httplib as http_client
+
+
 def main(args):
+    #http_client.HTTPConnection.debuglevel = 1
+
+    # You must initialize logging, otherwise you'll not see debug output.
+    #logging.basicConfig()
+    #logging.getLogger().setLevel(logging.DEBUG)
+    #requests_log = logging.getLogger("requests.packages.urllib3")
+    #requests_log.setLevel(logging.DEBUG)
+    #requests_log.propagate = True
+
+    #requests.get('https://httpbin.org/headers')
+
     parser = argparse.ArgumentParser(description='update environment variables on travis and appveyor')
     parser.add_argument('-p', '--project', action='append', dest='projects', type=str, required=True,
                         help='GitHub project name (aka projectSlug)')
@@ -30,6 +55,8 @@ def main(args):
                         help='skip appveyor configuration')
     parser.add_argument('--skip-circle', action='store_true', dest='skip_circle',
                         help='skip circle configuration')
+    parser.add_argument('--skip-azure', action='store_true', dest='skip_azure',
+                        help='skip azure configuration')
     parser.add_argument('-r', '--remove', action='store_true', dest='remove',
                         help='remove specified project(s)')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
@@ -48,9 +75,13 @@ def main(args):
                         help='endpoint for appveyor REST API')
     parser.add_argument('--circle-host', dest='circle_host', type=str, default=Circle.default_host,
                         help='endpoint for circle REST API')
+    parser.add_argument('--azure-host', dest='azure_host', type=str, default=Azure.default_host,
+                        help='endpoint for circle REST API')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.set_defaults(skip_travis=False)
-    parser.set_defaults(skip_appveyor=False)
+    parser.set_defaults(skip_travis=True)
+    parser.set_defaults(skip_appveyor=True)
+    parser.set_defaults(skip_circle=True)
+    parser.set_defaults(skip_azure=False)
     args = parser.parse_args(args)
 
     config_path = args.config
@@ -92,10 +123,13 @@ def main(args):
         ci_systems.append(Appveyor(config, args.appveyor_host))
     if not args.skip_circle:
         ci_systems.append(Circle(config, args.circle_host))
+    if not args.skip_azure:
+        ci_systems.append(Azure(config, args.azure_host))
 
     for project in args.projects:
         for ci_system in ci_systems:
-            try:
+            #try:
+            if True:
                 print('updating project %s on %s...' % (project, ci_system.name))
                 if args.remove:
                     ci_system.remove(project, args.force)
@@ -103,7 +137,8 @@ def main(args):
                     ci_system.add(project)
                     ci_system.update(project, env_vars, encrypted_vars)
                 print('updating project %s on %s...OK' % (project, ci_system.name))
-            except Exception as e:
+            else:
+            #except Exception as e:
                 print('updating project %s on %s...FAIL\n%s' % (project, ci_system.name, e))
                 failed = True
 

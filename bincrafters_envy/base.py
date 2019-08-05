@@ -16,6 +16,7 @@ class Base(object):
         self._auth = None
         self._token = self._read_token(config)
         self._host = self._read_host(config) or host
+        self._headers = dict()
 
     @abstractmethod
     def add(self, project_slug):
@@ -36,6 +37,10 @@ class Base(object):
     @abstractmethod
     def remove_one(self, project_slug):
         raise NotImplementedError('"remove_one" method is abstract')
+
+    @abstractmethod
+    def list(self):
+        raise NotImplementedError('"list" method is abstact')
 
     @abstractmethod
     def exists(self, project_slug):
