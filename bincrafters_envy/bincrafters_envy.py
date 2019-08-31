@@ -35,16 +35,8 @@ except ImportError:
 
 
 def main(args):
-    #http_client.HTTPConnection.debuglevel = 1
-
-    # You must initialize logging, otherwise you'll not see debug output.
-    #logging.basicConfig()
-    #logging.getLogger().setLevel(logging.DEBUG)
-    #requests_log = logging.getLogger("requests.packages.urllib3")
-    #requests_log.setLevel(logging.DEBUG)
-    #requests_log.propagate = True
-
-    #requests.get('https://httpbin.org/headers')
+    logging.basicConfig()
+    logging.getLogger().setLevel(logging.INFO)
 
     parser = argparse.ArgumentParser(description='update environment variables on travis and appveyor')
     parser.add_argument('-p', '--project', action='append', dest='projects', type=str, required=True,
@@ -86,14 +78,22 @@ def main(args):
     parser.add_argument('--azure-host', dest='azure_host', type=str, default=Azure.default_host,
                         help='endpoint for circle REST API')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
+    parser.add_argument("--verbose", help="increase output verbosity", action="store_true")
     parser.set_defaults(skip_travis=False)
     parser.set_defaults(skip_appveyor=False)
     parser.set_defaults(skip_circle=True)
     parser.set_defaults(skip_azure=True)
     args = parser.parse_args(args)
 
+    if args.verbose:
+        http_client.HTTPConnection.debuglevel = 1
+        logging.basicConfig(level=logging.DEBUG)
+        requests_log = logging.getLogger("requests.packages.urllib3")
+        requests_log.setLevel(logging.DEBUG)
+        requests_log.propagate = True
+
     config_path = args.config
-    print("args", args.config)
+    logging.info("args: %s" % args.config)
     if not os.path.isfile(config_path):
         user_home = os.environ.get("HOME", os.environ.get("USERPROFILE", os.path.expanduser("~")))
         xdg_config_home = os.environ.get("XDG_CONFIG_HOME", os.path.join(user_home, ".config"))
@@ -101,9 +101,9 @@ def main(args):
         if not os.path.isabs(config_path) and os.path.isfile(xdg_config_path):
             config_path = xdg_config_path
         else:
-            print('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
+            logging.error('%s file is missing, please create one (see env.ini.example for the details)' % args.config)
             sys.exit(1)
-    print("using config: %s" % config_path)
+    logging.info("using config: %s" % config_path)
 
     env_vars = dict()
     config = ConfigParser(allow_no_value=True)
@@ -137,15 +137,15 @@ def main(args):
     for project in args.projects:
         for ci_system in ci_systems:
             try:
-                print('updating project %s on %s...' % (project, ci_system.name))
+                logging.info('updating project %s on %s...' % (project, ci_system.name))
                 if args.remove:
                     ci_system.remove(project, args.force)
                 else:
                     ci_system.add(project)
                     ci_system.update(project, env_vars, encrypted_vars)
-                print('updating project %s on %s...OK' % (project, ci_system.name))
+                logging.info('updating project %s on %s...OK' % (project, ci_system.name))
             except Exception as e:
-                print('updating project %s on %s...FAIL\n%s' % (project, ci_system.name, e))
+                logging.error('updating project %s on %s...FAIL\n%s' % (project, ci_system.name, e))
                 failed = True
 
     sys.exit(1 if failed else 0)

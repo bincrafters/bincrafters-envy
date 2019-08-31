@@ -7,6 +7,7 @@ import six
 import fnmatch
 import requests
 import json
+import logging
 from abc import abstractmethod, ABCMeta
 
 
@@ -66,10 +67,10 @@ class Base(object):
 
     @staticmethod
     def _yes_no():
-        print('[y/n]')
+        logging.warning('[y/n]')
         choice = six.moves.input().lower()
         while choice not in ['y', 'n']:
-            print('please respond with y or n')
+            logging.error('please respond with y or n')
             choice = six.moves.input().lower()
         return choice == 'y'
 
@@ -105,11 +106,11 @@ class Base(object):
         projects = self.list()
         projects = [p for p in projects if fnmatch.fnmatch(p, project_slug)]
         if not projects:
-            print("no projects matching %s pattern were found on %s" % (project_slug, self.name))
+            logging.error("no projects matching %s pattern were found on %s" % (project_slug, self.name))
             return
-        print("the following projects will be removed:")
+        logging.warning("the following projects will be removed:")
         for p in projects:
-            print(p)
+            logging.warning(p)
         remove = force or self._yes_no()
         if remove:
             for p in projects:
@@ -117,8 +118,8 @@ class Base(object):
 
     def add(self, project_slug):
         if self.exists(project_slug):
-            print('project %s already exists on %s' % (project_slug, self.name))
+            logging.warning('project %s already exists on %s' % (project_slug, self.name))
         else:
-            print('adding project %s to %s' % (project_slug, self.name))
+            logging.info('adding project %s to %s' % (project_slug, self.name))
 
             self.add_one(project_slug)
