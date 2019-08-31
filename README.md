@@ -5,7 +5,7 @@
 
 # Bincrafters Envy
 
-Update environment variables for travis and appveyor
+Update environment variables for travis, appveyor, Azure DevOps Pipelines and Circle CI.
 
 #### Install
 To install using pypi.org:
@@ -13,13 +13,17 @@ To install using pypi.org:
     pip install bincrafters-envy
 
 #### Usage
-first, you'll need to obtains travis and appveyor tokens
+first, you'll need to obtain API tokens:
 
 to obtain appveyor token, visit this [page](https://ci.appveyor.com/api-keys)
 
 to obtain travis token (for travis-ci.com), visit this [page](https://travis-ci.com/account/preferences)
 
 to obtain travis token (for travis-ci.org), visit this [page](https://travis-ci.org/account/preferences)
+
+to obtain AZP (Azure DevOps Pipelines) token, visit this [page](https://dev.azure.com/bincrafters/_usersSettings/tokens)
+
+to obtain Circle CI token, visit this [page](https://circleci.com/account/api)
 
 create **env.ini** file with your environment variables (take a look at the **env.ini.example**):
 
@@ -28,15 +32,18 @@ create **env.ini** file with your environment variables (take a look at the **en
 appveyor = <your account name on appveyor>
 travis = <your account name on travis>
 github = <your account name on GitHub>
+azure = <your account name on Azure>
+circle = <your account name on Circle CI>
+[token]
+appveyor = <your appveyor token>
+travis = <your travis token>
+azure = <your Azure DevOps Pipelines token>
+circle = <you Circle CI token>
 [env]
 CONAN_LOGIN_USERNAME = <your username>
 CONAN_PASSWORD = <your password>
 [encrypted]
 CONAN_PASSWORD
-[token]
-appveyor = <your appveyor token>
-travis = <your travis token>
-
 ```
 
 then run `python envy.py -p <project>` (e.g. `python envy.py -p conan-libastral`)
