@@ -19,14 +19,6 @@ class Base(object):
         self._headers = dict()
 
     @abstractmethod
-    def add(self, project_slug):
-        raise NotImplementedError('"add" method is abstract')
-
-    @abstractmethod
-    def remove(self, project_slug, force):
-        raise NotImplementedError('"remove" method is abstract')
-
-    @abstractmethod
     def update(self, project_slug, env_vars, encrypted_vars):
         raise NotImplementedError('"update" method is abstract')
 
