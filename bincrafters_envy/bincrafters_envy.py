@@ -86,10 +86,10 @@ def main(args):
     parser.add_argument('--azure-host', dest='azure_host', type=str, default=Azure.default_host,
                         help='endpoint for circle REST API')
     parser.add_argument('-v', '--version', action='version', version='%(prog)s {}'.format(__version__))
-    parser.set_defaults(skip_travis=True)
-    parser.set_defaults(skip_appveyor=True)
+    parser.set_defaults(skip_travis=False)
+    parser.set_defaults(skip_appveyor=False)
     parser.set_defaults(skip_circle=True)
-    parser.set_defaults(skip_azure=False)
+    parser.set_defaults(skip_azure=True)
     args = parser.parse_args(args)
 
     config_path = args.config
@@ -136,8 +136,7 @@ def main(args):
 
     for project in args.projects:
         for ci_system in ci_systems:
-            #try:
-            if True:
+            try:
                 print('updating project %s on %s...' % (project, ci_system.name))
                 if args.remove:
                     ci_system.remove(project, args.force)
@@ -145,8 +144,7 @@ def main(args):
                     ci_system.add(project)
                     ci_system.update(project, env_vars, encrypted_vars)
                 print('updating project %s on %s...OK' % (project, ci_system.name))
-            else:
-            #except Exception as e:
+            except Exception as e:
                 print('updating project %s on %s...FAIL\n%s' % (project, ci_system.name, e))
                 failed = True
 
