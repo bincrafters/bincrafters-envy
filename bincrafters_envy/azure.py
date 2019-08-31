@@ -23,12 +23,20 @@ class Azure(Base):
     def add_one(self, project_slug):
         url = "/build/definitions" + self._api_version
         data = dict()
-        data["process"] = {"type": 2}  # YAML
+        data["process"] = {"type": 2, "yamlFilename": "./azure-pipelines.yml"}  # YAML
         data["name"] = "%s.%s" % (self._account, project_slug)
+        data["type"] = "build"
+        data["queueStatus"] = "enabled"
+        data["processParameters"] = dict()
+        data["drafts"] = []
         data["repository"] = dict()
         data["repository"]["id"] = "%s/%s" % (self._account, project_slug)
         data["repository"]["type"] = "GitHub"
-        data["repository"]["Url"] = "https://github.com/%s/%s.git" % (self._account, project_slug)
+        data["repository"]["url"] = "https://github.com/%s/%s.git" % (self._account, project_slug)
+        data["repository"]["defaultBranch"] = "refs/heads/live"
+        data["repository"]["clean"] = "false"
+        data["repository"]["checkoutSubmodules"] = "false"
+
         self._post(url=url, data=json.dumps(data))
         pass
 
