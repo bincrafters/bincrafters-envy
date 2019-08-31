@@ -92,7 +92,7 @@ class Base(object):
     def _read_token(cls, config):
         filename = cls.name + ".token"
         envname = cls.name.upper() + "_TOKEN"
-        if config and 'token' in config and config['token'][cls.name]:
+        if config and 'token' in config and cls.name in config['token']:
             return config['token'][cls.name]
         if envname in os.environ:
             return os.environ[envname]
