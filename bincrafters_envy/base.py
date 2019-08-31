@@ -106,7 +106,7 @@ class Base(object):
             return os.environ[envname]
         if os.path.isfile(filename):
             return open(filename, 'r').read().strip()
-        raise Exception('no %s token provided!'
+        raise Exception('no %s token provided! '
                         'please specify %s environment variable or create %s file' % (cls.name, envname, filename))
 
     def remove(self, project_slug, force):
