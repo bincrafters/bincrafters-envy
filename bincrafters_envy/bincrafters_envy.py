@@ -57,6 +57,14 @@ def main(args):
                         help='skip circle configuration')
     parser.add_argument('--skip-azure', action='store_true', dest='skip_azure',
                         help='skip azure configuration')
+    parser.add_argument('--with-travis', action='store_false', dest='skip_travis',
+                        help='update travis configuration')
+    parser.add_argument('--with-appveyor', action='store_false', dest='skip_appveyor',
+                        help='update appveyor configuration')
+    parser.add_argument('--with-circle', action='store_false', dest='skip_circle',
+                        help='update circle configuration')
+    parser.add_argument('--with-azure', action='store_false', dest='skip_azure',
+                        help='update azure configuration')
     parser.add_argument('-r', '--remove', action='store_true', dest='remove',
                         help='remove specified project(s)')
     parser.add_argument('-f', '--force', action='store_true', dest='force',
