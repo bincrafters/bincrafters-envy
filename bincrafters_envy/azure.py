@@ -20,7 +20,19 @@ class Azure(Base):
         self._headers = {'Content-type': 'application/json'}
         self._auth = HTTPBasicAuth(username=self._token, password="")
 
+    def _get_default_branch(self, url):
+        import subprocess
+        import tempfile
+
+        # is there a better way, e.g. without clone?
+        directory = tempfile.mkdtemp()
+        subprocess.check_call(["git", "clone", "--depth", "1", url, directory])
+        branch = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=directory)
+        branch = branch.decode().strip()
+        return branch
+
     def add_one(self, project_slug):
+        github_url = "https://github.com/%s/%s.git" % (self._account, project_slug)
         url = "/build/definitions" + self._api_version
         data = dict()
         data["process"] = {"type": 2, "yamlFilename": "./azure-pipelines.yml"}  # YAML
@@ -29,13 +41,17 @@ class Azure(Base):
         data["queueStatus"] = "enabled"
         data["processParameters"] = dict()
         data["drafts"] = []
+        data["queue"] = {'id': 7, 'name': 'Default'}
+        data["queue"]["pool"] = {'id': 1, 'name': 'Default'}
         data["repository"] = dict()
         data["repository"]["id"] = "%s/%s" % (self._account, project_slug)
+        data["repository"]["name"] = "%s/%s" % (self._account, project_slug)
         data["repository"]["type"] = "GitHub"
-        data["repository"]["url"] = "https://github.com/%s/%s.git" % (self._account, project_slug)
-        data["repository"]["defaultBranch"] = "refs/heads/live"
+        data["repository"]["url"] = github_url
+        data["repository"]["defaultBranch"] = self._get_default_branch(github_url)
         data["repository"]["clean"] = "false"
-        data["repository"]["checkoutSubmodules"] = "false"
+        data["repository"]["checkoutSubmodules"] = False
+        data["repository"]["properties"] = dict()
 
         self._post(url=url, data=json.dumps(data))
         pass
