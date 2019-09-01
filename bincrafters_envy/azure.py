@@ -51,7 +51,7 @@ class Azure(Base):
         data["repository"]["defaultBranch"] = self._get_default_branch(github_url)
         data["repository"]["clean"] = "false"
         data["repository"]["checkoutSubmodules"] = False
-        data["repository"]["properties"] = dict()
+        data["repository"]["properties"] = {'connectedServiceId': '1b6eeb61-8694-4b38-8804-96e4340e4660'}
 
         self._post(url=url, data=json.dumps(data))
         pass
