@@ -23,6 +23,12 @@ to obtain travis token (for travis-ci.org), visit this [page](https://travis-ci.
 
 to obtain AZP (Azure DevOps Pipelines) token, visit this [page](https://dev.azure.com/bincrafters/_usersSettings/tokens)
 
+NOTE: AZP token must have at least the following permissions:
+
+- Build: Read & Execute
+
+- Variable Groups: Read, Create & Manage
+
 to obtain Circle CI token, visit this [page](https://circleci.com/account/api)
 
 create **env.ini** file with your environment variables (take a look at the **env.ini.example**):
