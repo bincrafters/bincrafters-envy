@@ -48,6 +48,8 @@ CONAN_PASSWORD
 
 then run `python envy.py -p <project>` (e.g. `python envy.py -p conan-libastral`)
 
+the `env.ini` configuration file is read from the `$XDG_CONFIG_HOME/.bincrafters-envy/env.ini` by default.
+
 #### Testing
 To run all unit tests:
 
