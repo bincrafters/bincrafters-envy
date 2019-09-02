@@ -18,7 +18,7 @@ from .azure import Azure
 
 __author__ = "BinCrafters"
 __license__ = "MIT"
-__version__ = '0.1.7'
+__version__ = '0.2.0'
 
 
 import requests
