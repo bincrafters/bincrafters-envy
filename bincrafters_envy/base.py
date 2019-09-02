@@ -56,7 +56,7 @@ class Base(object):
 
     def _request(self, method, url, json=None, expected_status=200):
         url = self._endpoint + url
-        r = requests.request(method=method, url=url, headers=self._headers, auth=self._auth, data=data)
+        r = requests.request(method=method, url=url, headers=self._headers, auth=self._auth, json=data)
         if r.status_code != expected_status:
             raise Exception('%s %s request failed %s %s' % (self.name, method, r.status_code, r.content))
         content_type = r.headers.get("Content-Type") or ""
