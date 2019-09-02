@@ -88,7 +88,7 @@ class Appveyor(Base):
         for _, v in new_env_vars.items():
             request.append(v)
 
-        self._put(url=appveyor_url, data=json.dumps(request), expected_status=204)
+        self._put(url=appveyor_url, json=request, expected_status=204)
 
     def _encrypt(self, value):
         appveyor_url = '/account/encrypt'
