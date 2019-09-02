@@ -53,7 +53,7 @@ class Azure(Base):
         data["repository"]["checkoutSubmodules"] = False
         data["repository"]["properties"] = {'connectedServiceId': '1b6eeb61-8694-4b38-8804-96e4340e4660'}
 
-        self._post(url=url, data=json.dumps(data))
+        self._post(url=url, json=data)
         pass
 
     def remove_one(self, project_slug):
