@@ -50,7 +50,7 @@ class Appveyor(Base):
             'repositoryProvider': 'gitHub',
             'repositoryName': repository_name
         }
-        self._post(url='/projects', data=json.dumps(request))
+        self._post(url='/projects', json=request)
 
     def remove_one(self, project_slug):
         appveyor_url = self._project_url(project_slug)
