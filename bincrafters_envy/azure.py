@@ -89,7 +89,7 @@ class Azure(Base):
         if groups["count"] > 0:
             groupid = groups["value"][0]["id"]
             url = "/distributedtask/variablegroups/" + str(groupid) + self._api_version + "-preview.1"
-            self._put(url=url, data=json.dumps(data))
+            self._put(url=url, json=data)
         else:
             url = "/distributedtask/variablegroups" + self._api_version + "-preview.1"
             self._post(url=url, data=json.dumps(data))
