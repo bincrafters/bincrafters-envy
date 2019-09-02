@@ -54,7 +54,7 @@ class Base(object):
     def _put(self, **kwargs):
         return self._request(method="PUT", **kwargs)
 
-    def _request(self, method, url, data=None, expected_status=200):
+    def _request(self, method, url, json=None, expected_status=200):
         url = self._endpoint + url
         r = requests.request(method=method, url=url, headers=self._headers, auth=self._auth, data=data)
         if r.status_code != expected_status:
