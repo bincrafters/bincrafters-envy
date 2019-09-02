@@ -92,7 +92,7 @@ class Azure(Base):
             self._put(url=url, json=data)
         else:
             url = "/distributedtask/variablegroups" + self._api_version + "-preview.1"
-            self._post(url=url, data=json.dumps(data))
+            self._post(url=url, json=data)
 
     def list(self):
         url = "/build/definitions" + self._api_version
