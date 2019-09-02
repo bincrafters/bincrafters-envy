@@ -66,7 +66,7 @@ class Travis(Base):
                 travis_url_env = self._project_url(project_slug) + '/env_var/' + ids[name]
                 self._patch(url=travis_url_env, json=request)
             else:
-                self._post(url=travis_url, data=json.dumps(request), expected_status=201)
+                self._post(url=travis_url, json=request, expected_status=201)
 
     def _activate(self, project_slug, enable=True):
         travis_url = self._project_url(project_slug) + '/activate' if enable else '/deactivate'
