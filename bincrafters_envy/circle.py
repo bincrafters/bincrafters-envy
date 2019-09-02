@@ -52,4 +52,4 @@ class Circle(Base):
 
         for k, v in env_vars.items():
             request = {"name": k, "value": v}
-            self._post(url=url, data=json.dumps(request), expected_status=201)
+            self._post(url=url, json=request, expected_status=201)
