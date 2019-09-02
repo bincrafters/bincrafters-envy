@@ -93,5 +93,5 @@ class Appveyor(Base):
     def _encrypt(self, value):
         appveyor_url = '/account/encrypt'
         request = {'plainValue': value}
-        encrypted = self._post(url=appveyor_url, data=json.dumps(request))
+        encrypted = self._post(url=appveyor_url, json=request)
         return encrypted.decode('utf-8', 'replace')
