@@ -64,7 +64,7 @@ class Travis(Base):
             }
             if name in ids.keys():
                 travis_url_env = self._project_url(project_slug) + '/env_var/' + ids[name]
-                self._patch(url=travis_url_env, data=json.dumps(request))
+                self._patch(url=travis_url_env, json=request)
             else:
                 self._post(url=travis_url, data=json.dumps(request), expected_status=201)
 
